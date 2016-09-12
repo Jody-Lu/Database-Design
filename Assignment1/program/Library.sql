@@ -95,3 +95,5 @@ Insert Into BORROWER Values(2, 'Jay', 'New Mechico', '091234');
 Insert Into BOOK_LOANS Values('123', '999', 1, '20160102', '20160104');
 Insert Into BOOK_LOANS Values('456', '888', 2, '20160102', '20160104');
 
+
+
