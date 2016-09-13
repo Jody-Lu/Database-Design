@@ -48,7 +48,7 @@ more than the employee who is paid the least in the company.
 SELECT E2.FNAME, E2.LNAME
   FROM EMPLOYEE E2
  WHERE E2.Salary >=
-       (SELECT MIN(E.Salary) + 1000
+       (SELECT (MIN(E.Salary) + 1000)
           FROM EMPLOYEE E);
 
 /*
@@ -77,7 +77,7 @@ a. A view that has the department name,
 manager name and manager salary for every department.
 */
 
-CREATE VIEW Mgr_view As
+CREATE VIEW PROBLEM_A As
      SELECT D.Dname, E.FNAME, E.LNAME, E.Salary
        FROM EMPLOYEE E, DEPARTMENT D
       WHERE E.Dno = D.Dno
@@ -89,7 +89,7 @@ number of employees working in that department,
 and the number of projects controlled by that department (for each department).
 */
 
-CREATE VIEW Dep_view AS
+CREATE VIEW PROBLEM_B AS
      SELECT D.Dname, E.FNAME, E.LNAME, COUNT(P.PNAME)
        FROM DEPARTMENT D, PROJECT P, EMPLOYEE E
       WHERE P.Dno = D.Dno
@@ -102,7 +102,7 @@ number of employees working on the project,
 and the total hours per week they work on the project (for each project).
 */
 
-CREATE VIEW Project_view As
+CREATE VIEW PROBLEM_C As
      SELECT P.Pname, D.Dname, COUNT(W.Ssn), SUM(W.HOURS)
        FROM PROJECT P, WORKS_ON W, DEPARTMENT D
       WHERE P.Pno = W.Pno
@@ -115,13 +115,13 @@ d. A view that has the project name, controlling department name,
 number of employees, and total hours worked per week on the project
 for each project with more than one employee working on it.
 */
-
-  SELECT P.Pname, D.Dname, COUNT(W.Ssn), SUM(W.Hours)
-    FROM PROJECT P, WORKS_ON W, DEPARTMENT D
-   WHERE P.Pno = W.Pno
-     AND P.Dno = D.Dno
-GROUP BY P.Pname, D.Dname
-  HAVING COUNT(W.Ssn) > 1;
+CREATE VIEW PROBLEM_D AS
+     SELECT P.Pname, D.Dname, COUNT(W.Ssn), SUM(W.Hours)
+       FROM PROJECT P, WORKS_ON W, DEPARTMENT D
+      WHERE P.Pno = W.Pno
+        AND P.Dno = D.Dno
+   GROUP BY P.Pname, D.Dname
+     HAVING COUNT(W.Ssn) > 1;
 
 /*
 e. A view that has the employee name, employee salary,
@@ -129,13 +129,14 @@ department that the employee works in, department manager name,
 manager salary, and average salary for the department.
 */
 
-SELECT E.FNAME, E.LNAME, E.Salary, D.Dname, E1.FNAME, E1.LNAME, E1.SALARY, (SELECT AVG(E.Salary)
-                                                                              FROM EMPLOYEE E
-                                                                             WHERE E.Dno = D.Dno
-                                                                          GROUP BY D.Dno) AS Avg_salary
-  FROM EMPLOYEE E, DEPARTMENT D, EMPLOYEE E1
- WHERE E.Dno = D.Dno
-   AND E1.Ssn = D.MGRSSN;
+CREATE VIEW PROBLEM_E AS
+     SELECT E.FNAME, E.LNAME, E.Salary, D.Dname, E1.FNAME, E1.LNAME, E1.SALARY, (SELECT AVG(E.Salary)
+                                                                                   FROM EMPLOYEE E
+                                                                                  WHERE E.Dno = D.Dno
+                                                                               GROUP BY D.Dno) AS Avg_salary
+      FROM EMPLOYEE E, DEPARTMENT D, EMPLOYEE E1
+     WHERE E.Dno = D.Dno
+       AND E1.Ssn = D.MGRSSN;
 
 
 
