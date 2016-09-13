@@ -54,14 +54,35 @@ SELECT E2.FNAME, E2.LNAME
 
 -- e -- ****
 
-SELECT E2.FNAME, E2.LNAME
-  FROM EMPLOYEE E2, DEPARTMENT D2, DEPENDENT DP
+SELECT E2.FNAME, E2.LNAME, E2.Salary, E2.Ssn
+  FROM EMPLOYEE E2, DEPARTMENT D2
  WHERE D2.Dno = E2.Dno
    AND (D2.Dname, E2.Salary) IN
        (SELECT D.Dname, MIN(E.Salary)
           FROM EMPLOYEE E, DEPARTMENT D
          WHERE E.Dno = D.Dno
-      GROUP BY D.Dname);
+      GROUP BY D.Dname)
+   AND (SELECT COUNT(DP.DEPNAME)
+          FROM DEPENDENT DP
+         WHERE DP.Essn = E2.Ssn
+      GROUP BY DP.Essn) > 1;
+
+/*
+SELECT E.FNAME, E.LNAME
+  FROM EMPLOYEE E
+ WHERE (SELECT COUNT(*)
+          FROM DEPENDENT DP
+         WHERE DP.Essn = E.Ssn) > 1;
+
+   SELECT DP.Essn, COUNT(*)
+     FROM DEPENDENT DP, EMPLOYEE E
+    WHERE DP.Essn = E.Ssn
+ GROUP BY DP.Essn;
+
+SELECT *
+  FROM EMPLOYEE
+ WHERE SSN = 333445555;
+*/
 
 /* 2.*/
 
@@ -81,35 +102,19 @@ number of employees working in that department,
 and the number of projects controlled by that department (for each department).
 */
 
-  SELECT D2.Dname, E2.FNAME, E2.LNAME, COUNT(P2.PNAME)
-    FROM DEPARTMENT D2, PROJECT P2, EMPLOYEE E2
-   WHERE P2.Dno = D2.Dno
-     AND E2.Ssn = D2.MGRSSN
-GROUP BY D2.Dname, E2.FNAME, E2.LNAME;
-
-SELECT *
-  FROM PROJECT;
-
-
-
---Create View Dep_view As -- create view
-Select K.Dname, E2.FNAME, E2.LNAME, K.people, K.projects -- include mgr's name
-From EMPLOYEE E2,
-(Select J.Dname Dname, J.mgrssn mgrssn, J.people people, Count(*) projects -- include number of projects
-From PROJECT P,
-(Select D.Dname Dname, D.Dno Dno, D.mgrssn mgrssn, Count(E.Ssn) people -- Got each department's mgr's SSN and its name
-From DEPARTMENT D, EMPLOYEE E
-Where D.Dno = E.Dno
-Group By D.Dname, D.Dno, D.mgrssn) J
-Where P.Dno = J.Dno
-Group By J.Dname, J.mgrssn, J.people) K
-Where E2.ssn = K.mgrssn;
+CREATE VIEW Dep_view AS
+     SELECT D.Dname, E.FNAME, E.LNAME, COUNT(P.PNAME)
+       FROM DEPARTMENT D, PROJECT P, EMPLOYEE E
+      WHERE P.Dno = D.Dno
+        AND E.Ssn = D.MGRSSN
+   GROUP BY D.Dname, E.FNAME, E.LNAME;
 
 /*
-c. A view that has the project name, controlling department name, 
-number of employees working on the project, 
+c. A view that has the project name, controlling department name,
+number of employees working on the project,
 and the total hours per week they work on the project (for each project).
 */
+
 CREATE VIEW Project_view As
      SELECT P.Pname, D.Dname, COUNT(W.Ssn), SUM(W.HOURS)
        FROM PROJECT P, WORKS_ON W, DEPARTMENT D
@@ -117,62 +122,34 @@ CREATE VIEW Project_view As
         AND P.Dno = D.Dno
    GROUP BY P.Pname, D.Dname;
 
-/* FOR DEBUG
-  SELECT W.Pno, COUNT(W.Ssn)
-    FROM WORKS_ON W
-GROUP BY W.Pno;
-
-SELECT W.PNO
-  FROM WORKS_ON W;
-  
-SELECT P.PNAME, P.PNO
-  FROM PROJECT P;
-*/
-/*
-  SELECT P.Pname, D.Dname
-    FROM PROJECT P, DEPARTMENT D, EMPLOYEE E
-   WHERE P.Dno = D.Dno
-     AND E.Dno = D.Dno
-ORDER BY P.Pname;
-*/
-
-
 
 /*
-d. A view that has the project name, controlling department name, 
-number of employees, and total hours worked per week on the project 
+d. A view that has the project name, controlling department name,
+number of employees, and total hours worked per week on the project
 for each project with more than one employee working on it.
 */
 
-Create View problem_d_view As
-Select K.Pname, K.Dname, K.People, J.Hours
-From
-(Select P.Pname Pname, D.Dname Dname, Count(E.Ssn) People
-From Project P, DEPARTMENT D, EMPLOYEE E
-Where P.Dno = D.Dno and E.Dno = D.Dno
-Group By P.Pname, D.Dname
-Having Count(E.Ssn) > 1) K,
-(Select P.Pname Pname, Sum(W.HOURS) Hours
-From WORKS_ON W, PROJECT P
-Where W.PNO = P.PNO
-Group By P.Pname) J
-Where K.Pname = J.Pname;
+  SELECT P.Pname, D.Dname, COUNT(W.Ssn), SUM(W.Hours)
+    FROM PROJECT P, WORKS_ON W, DEPARTMENT D
+   WHERE P.Pno = W.Pno
+     AND P.Dno = D.Dno
+GROUP BY P.Pname, D.Dname
+  HAVING COUNT(W.Ssn) > 1;
 
 /*
-e. A view that has the employee name, employee salary, 
-department that the employee works in, department manager name, 
+e. A view that has the employee name, employee salary,
+department that the employee works in, department manager name,
 manager salary, and average salary for the department.
 */
 
-Select E.FNAME, E.LNAME, E.Salary, D.Dname, MGR.MGRFNAME, MGR.MGRLNAME, MGR.MGRSalary
-From EMPLOYEE E, DEPARTMENT D, 
-(Select E2.FNAME MGRFNAME, E2.LNAME MGRLNAME, D2.Dname Dname, E2.SALARY MGRSalary 
-From EMPLOYEE E2, DEPARTMENT D2
-Where E2.SSN = D2.MGRSSN) MGR
-Where E.Dno = D.Dno and MGR.Dname = D.Dname
+SELECT E.FNAME, E.LNAME, E.Salary, D.Dname, E1.FNAME, E1.LNAME, E1.SALARY, (SELECT AVG(E.Salary)
+                                                                              FROM EMPLOYEE E
+                                                                             WHERE E.Dno = D.Dno
+                                                                          GROUP BY D.Dno) AS Avg_salary
+  FROM EMPLOYEE E, DEPARTMENT D, EMPLOYEE E1
+ WHERE E.Dno = D.Dno
+   AND E1.Ssn = D.MGRSSN;
 
-Select D.Dname
-From DEPARTMENT D;
 
 
 
