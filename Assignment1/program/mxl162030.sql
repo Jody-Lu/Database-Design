@@ -1,22 +1,19 @@
--- Test --
-SELECT D.Dname, E.FNAME, E.LNAME, E.Sex
-  FROM DEPARTMENT D, EMPLOYEE E
- WHERE D.Dno = E.Dno
-   AND E.Sex = 'M';
+/* Part 2-1*/
 
-/**************************************/
-SELECT AVG(E.Salary)
-  FROM EMPLOYEE E;
-
-/* 1. Write following queries in SQL1.*/
--- a --
+/*
+a. For each department whose average employee salary is more than $30,000,
+retrieve the department name and the number of employees working for that department.
+*/
   SELECT D.Dname, Count(Ssn)
     FROM DEPARTMENT D, EMPLOYEE E
    WHERE D.Dno = E.Dno
 GROUP BY D.Dname
   HAVING AVG(Salary) > 30000;
 
--- b --
+/*
+b. Same as a, except output the number of male
+employees instead of the number of employees.
+*/
 
   SELECT D2.Dname, COUNT(E2.Ssn)
     FROM DEPARTMENT D2, EMPLOYEE E2
@@ -30,10 +27,9 @@ GROUP BY D.Dname
      AND E2.SEX = 'M'
 GROUP BY D2.Dname;
 
--- c --
 /*
-1. Retrieve the highest Salary from each Department (J)
-2. Retrieve the name whose salary equals J.Salary and Dname = J.Dname
+c. Retrieve the names of all employees who work in the department that
+has the employee with the highest salary among all employees.
 */
 
 SELECT D2.Dname, E2.FNAME, E2.LNAME
@@ -44,7 +40,10 @@ SELECT D2.Dname, E2.FNAME, E2.LNAME
          WHERE D.Dno = E.Dno
       GROUP BY D.Dname);
 
--- d --
+/*
+d. Retrieve the names of employees who make at least $10,000
+more than the employee who is paid the least in the company.
+*/
 
 SELECT E2.FNAME, E2.LNAME
   FROM EMPLOYEE E2
@@ -52,12 +51,15 @@ SELECT E2.FNAME, E2.LNAME
        (SELECT MIN(E.Salary) + 1000
           FROM EMPLOYEE E);
 
--- e -- ****
+/*
+e. Retrieve the names of employees who is making least in their departments
+and have more than one dependent. (solve using correlated nested queries)
+*/
 
-SELECT E2.FNAME, E2.LNAME, E2.Salary, E2.Ssn
-  FROM EMPLOYEE E2, DEPARTMENT D2
- WHERE D2.Dno = E2.Dno
-   AND (D2.Dname, E2.Salary) IN
+SELECT E1.FNAME, E1.LNAME, E1.Salary, E1.Ssn
+  FROM EMPLOYEE E1, DEPARTMENT D1
+ WHERE D1.Dno = E1.Dno
+   AND (D1.Dname, E1.Salary) IN
        (SELECT D.Dname, MIN(E.Salary)
           FROM EMPLOYEE E, DEPARTMENT D
          WHERE E.Dno = D.Dno
@@ -67,29 +69,14 @@ SELECT E2.FNAME, E2.LNAME, E2.Salary, E2.Ssn
          WHERE DP.Essn = E2.Ssn
       GROUP BY DP.Essn) > 1;
 
-/*
-SELECT E.FNAME, E.LNAME
-  FROM EMPLOYEE E
- WHERE (SELECT COUNT(*)
-          FROM DEPENDENT DP
-         WHERE DP.Essn = E.Ssn) > 1;
 
-   SELECT DP.Essn, COUNT(*)
-     FROM DEPENDENT DP, EMPLOYEE E
-    WHERE DP.Essn = E.Ssn
- GROUP BY DP.Essn;
-
-SELECT *
-  FROM EMPLOYEE
- WHERE SSN = 333445555;
-*/
-
-/* 2.*/
+/* Part 2-2*/
 
 /*
 a. A view that has the department name,
 manager name and manager salary for every department.
 */
+
 CREATE VIEW Mgr_view As
      SELECT D.Dname, E.FNAME, E.LNAME, E.Salary
        FROM EMPLOYEE E, DEPARTMENT D
