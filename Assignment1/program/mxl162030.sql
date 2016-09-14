@@ -6,102 +6,119 @@ Define required constraints on given tables.s
 Define triggered actions that will be attached to each foreign key constraint.
 */
 
-Create Table PUBLISHERR (
-  NAME        VARCHAR(15)     Not NULL,
+-- Create all tables
+
+/*
+I defined the triggered actions in all foreign keys with CASCADE DELETE because,
+in this schema, whenever a record is deleted, then the related records in the
+database should be deleted automatically. For example, once I remove a borrower in table BORROWER,
+and then the information about this borrower in table BOOK_LOANS should be deleted.
+It makes sense that if the information about a borrower is not available,
+we don’t have his/her records of the loan.
+*/
+
+CREATE TABLE PUBLISHERR (
+  NAME         VARCHAR(15)    NOT NULL,
   Address      VARCHAR(30),
   Phone        CHAR(10),
-  Primary Key(PNAME)
+  PRIMARY KEY(PNAME)
 );
 
 
-Create Table BOOK (
-  Book_id         VARCHAR(15),
-  Title           VARCHAR(30),
-  Publisher_name  VARCHAR(30),
-  Primary Key(Book_id),
-  Foreign Key(Publisher_name) references PUBLISHER(NAME)
+CREATE TABLE BOOK (
+  Book_id         CHAR(10)     NOT NULL,
+  Title           VARCHAR(20)  NOT NULL,
+  Publisher_name  VARCHAR(20)  NOT NULL,
+  PRIMARY KEY(Book_id),
+  FOREIGN KEY(Publisher_name) REFERENCES PUBLISHER(NAME) ON DELETE CASCADE ENABLE
 );
 
 
-Create Table BOOK_AUTHOR (
-  Book_id         VARCHAR(15),
-  Author_name     VARCHAR(15),
-  Primary Key(Book_id, Author_name),
-  Foreign Key(Book_id) references BOOK(Book_id)
+CREATE TABLE BOOK_AUTHOR (
+  Book_id         CHAR(10)     NOT NULL,
+  Author_name     VARCHAR(15)  NOT NULL,
+  PRIMARY KEY(Book_id, Author_name),
+  FOREIGN KEY(Book_id) REFERENCES BOOK(Book_id) ON DELETE CASCADE ENABLE
 );
 
 
-Create Table LIBRARY_BRANCH (
-  Branch_id       VARCHAR(15),
-  Branch_name     VARCHAR(30),
+CREATE TABLE LIBRARY_BRANCH (
+  Branch_id       INT          NOT NULL,
+  Branch_name     VARCHAR(10),
   Address         VARCHAR(30),
-  Primary Key(Branch_id)
+  PRIMARY KEY(Branch_id)
 );
 
 
-Create Table BOOK_COPIES (
-  Book_id         VARCHAR(15),
-  Branch_id       VARCHAR(15),
+CREATE TABLE BOOK_COPIES (
+  Book_id         CHAR(10)     NOT NULL,
+  Branch_id       INT          NOT NULL,
   No_of_copies    INT,
-  Primary Key(Book_id, Branch_id),
-  Foreign Key(Book_id) references BOOK(Book_id),
-  Foreign Key(Branch_id) references LIBRARY_BRANCH(Branch_id)
+  PRIMARY KEY(Book_id, Branch_id),
+  FOREIGN KEY(Book_id) REFERENCES BOOK(Book_id) ON DELETE CASCADE ENABLE,
+  FOREIGN KEY(Branch_id) REFERENCES LIBRARY_BRANCH(Branch_id) ON DELETE CASCADE ENABLE
 );
 
 
-Create Table BORROWER (
-  Card_no         INT,
-  Name            VARCHAR(15),
+CREATE TABLE BORROWER (
+  Card_no         CHAR(10)    NOT NULL,
+  Name            VARCHAR(10),
   Address         VARCHAR(30),
-  Phone           VARCHAR(15),
-  Primary Key(Card_no)
+  Phone           CHAR(10),
+  PRIMARY KEY(Card_no)
 );
 
 
-Create Table BOOK_LOANS (
-  Book_id         VARCHAR(15),
-  Branch_id       VARCHAR(15),
-  Card_no         INT,
-  Date_out        VARCHAR(15),
-  Due_date        VARCHAR(15),
-  Primary Key(Book_id, Branch_id, Card_no),
-  Foreign Key(Book_id) references BOOK(Book_id),
-  Foreign Key(Branch_id) references LIBRARY_BRANCH(Branch_id),
-  Foreign Key(Card_no) references BORROWER(Card_no)
+CREATE TABLE BOOK_LOANS (
+  Book_id         CHAR(10)  NOT NULL,
+  Branch_id       INT       NOT NULL,
+  Card_no         CHAR(10)  NOT NULL,
+  Date_out        DATE,
+  Due_date        DATE,
+  PRIMARY KEY(Book_id, Branch_id, Card_no),
+  FOREIGN KEY(Book_id) REFERENCES BOOK(Book_id) ON DELETE CASCADE ENABLE,
+  FOREIGN KEY(Branch_id) REFERENCES LIBRARY_BRANCH(Branch_id) ON DELETE CASCADE ENABLE,
+  FOREIGN KEY(Card_no) REFERENCES BORROWER(Card_no) ON DELETE CASCADE ENABLE
 );
+
+-- Schema change in table BOOK_LOANS
+
+ALTER TABLE BOOK_LOANS
+ADD RETURN_DATE DATE;
+
 
 /*
 2. Insert two imaginary tuples into each table.
 */
 
 /* Insert data into PUBLISHER. */
-Insert Into PUBLISHER Values('Tom', 'Dallas', '4693631618');
-Insert Into PUBLISHER Values('John', 'Pola Auto', '1234568');
+INSERT INTO PUBLISHER VALUES('Tom', 'Dallas', '4693631618');
+INSERT INTO PUBLISHER VALUES('John', 'Pola Auto', '1234568');
 
 
 /* Insert data into BOOK. */
-Insert Into BOOK Values('123', 'Hello World!', 'Tom');
-Insert Into BOOK Values('456', 'Welcome SQL!', 'John');
+INSERT INTO BOOK VALUES('123', 'Hello World!', 'Tom');
+INSERT INTO BOOK VALUES('456', 'Welcome SQL!', 'John');
 
 /* Insert data into BOOK_AUTHOR. */
-Insert Into BOOK_AUTHOR Values('123', 'David');
-Insert Into BOOK_AUTHOR Values('456', 'Jody');
+INSERT INTO BOOK_AUTHOR VALUES('123', 'David');
+INSERT INTO BOOK_AUTHOR VALUES('456', 'Jody');
 
 /* Insert data into LIBRARY_BRANCH. */
-Insert Into LIBRARY_BRANCH Values('999', 'Plano', 'San Jose');
-Insert Into LIBRARY_BRANCH Values('888', 'Richarson', 'Washington');
+INSERT INTO LIBRARY_BRANCH VALUES('999', 'Plano', 'San Jose');
+INSERT INTO LIBRARY_BRANCH VALUES('888', 'Richarson', 'Washington');
 
 /* Insert data into BOOK_COPIES. */
-Insert Into BOOK_COPIES Values('123', '999', 3);
-Insert Into BOOK_COPIES Values('456', '888', 2);
+INSERT INTO BOOK_COPIES VALUES('123', 999, 3);
+INSERT INTO BOOK_COPIES VALUES('456', 888, 2);
 
 /* Insert data into BORROWER. */
-Insert Into BORROWER Values(1, 'Johnson', 'New York', '0922850');
-Insert Into BORROWER Values(2, 'Jay', 'New Mechico', '091234');
+INSERT INTO BORROWER VALUES('1', 'Johnson', 'New York', '0922850');
+INSERT INTO BORROWER VALUES('2', 'Jay', 'New Mechico', '091234');
 
 /* Insert data into BOOK_LOANS. */
-Insert Into BOOK_LOANS Values('123', '999', 1, '20160102', '20160104');
-Insert Into BOOK_LOANS Values('456', '888', 2, '20160102', '20160104');
+INSERT INTO BOOK_LOANS VALUES('123', 999, '1', TO_DATE('01-02-2016', 'MM-DD-YYYY'), TO_DATE('01-04-2016', 'MM-DD-YYYY'));
+INSERT INTO BOOK_LOANS VALUES('456', 888, '2', TO_DATE('01-03-2016', 'MM-DD-YYYY'), TO_DATE('01-04-2016', 'MM-DD-YYYY'));
 
 
 /*
